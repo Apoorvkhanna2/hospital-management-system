@@ -16,8 +16,8 @@
         stage('Build Docker Images') {
             steps {
                 script {
-                    docker.build(\"apoorv468/hospital-backend:\\", \"./backend\")
-                    docker.build(\"apoorv468/hospital-frontend:\\", \"./frontend\")
+                    docker.build("apoorv468/hospital-backend:${env.BUILD_NUMBER}", "./backend")
+                    docker.build("apoorv468/hospital-frontend:${env.BUILD_NUMBER}", "./frontend")
                 }
             }
         }
@@ -26,8 +26,8 @@
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
-                        docker.image(\"apoorv468/hospital-backend:\\").push()
-                        docker.image(\"apoorv468/hospital-frontend:\\").push()
+                        docker.image("apoorv468/hospital-backend:${env.BUILD_NUMBER}").push()
+                        docker.image("apoorv468/hospital-frontend:${env.BUILD_NUMBER}").push()
                     }
                 }
             }
@@ -35,9 +35,21 @@
         
         stage('Success') {
             steps {
-                sh 'echo \"ðŸŽ‰ CI/CD Pipeline Completed Successfully!\"'
-                sh 'echo \"Docker images pushed to: https://hub.docker.com/r/apoorv468/\"'
+                sh 'echo "🎉 CI/CD Pipeline Completed Successfully!"'
+                sh 'echo "Docker images pushed to Docker Hub"'
             }
+        }
+    }
+    
+    post {
+        always {
+            echo "Pipeline execution completed"
+        }
+        success {
+            echo "✅ Hospital Management System CI/CD completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed - check logs above"
         }
     }
 }
