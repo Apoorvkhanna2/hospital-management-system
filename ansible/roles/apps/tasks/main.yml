@@ -1,0 +1,58 @@
+---
+- name: Create application directory
+  file:
+    path: "{{ app_directory }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Copy docker-compose file
+  copy:
+    src: ../../../../docker-compose.yml
+    dest: "{{ app_directory }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Copy environment files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ app_directory }}/"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  loop:
+    - ../../../../backend/.env
+    - ../../../../frontend/.env
+
+- name: Pull Docker images
+  community.docker.docker_image:
+    name: "{{ dockerhub_username }}/{{ item }}"
+    tag: latest
+    source: pull
+  loop:
+    - hospital-backend
+    - hospital-frontend
+
+- name: Start application with Docker Compose
+  community.docker.docker_compose:
+    project_src: "{{ app_directory }}"
+    state: present
+    restarted: yes
+
+- name: Wait for services to be ready
+  wait_for:
+    port: 3000
+    host: "{{ ansible_host }}"
+    delay: 10
+    timeout: 60
+
+- name: Check application health
+  uri:
+    url: "http://{{ ansible_host }}:5000/health"
+    method: GET
+    status_code: 200
+  register: health_check
+
+- name: Display health check result
+  debug:
+    msg: "Application health check: {{ health_check.status }}"

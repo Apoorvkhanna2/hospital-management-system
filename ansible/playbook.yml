@@ -1,0 +1,37 @@
+---
+- name: Deploy Hospital Management System
+  hosts: hospital_servers
+  become: yes
+  vars:
+    dockerhub_username: "{{ dockerhub_username }}"
+    dockerhub_token: "{{ dockerhub_token }}"
+    app_directory: "/opt/hospital-management-system"
+
+  tasks:
+    - name: Include docker role
+      include_role:
+        name: docker
+
+    - name: Include app role
+      include_role:
+        name: app
+
+- name: Configure monitoring and logging
+  hosts: hospital_servers
+  become: yes
+  tasks:
+    - name: Install monitoring tools
+      apt:
+        name:
+          - htop
+          - iotop
+          - nethogs
+        state: present
+
+    - name: Configure log rotation
+      copy:
+        src: files/logrotate-hospital
+        dest: /etc/logrotate.d/hospital-management
+        owner: root
+        group: root
+        mode: '0644'
