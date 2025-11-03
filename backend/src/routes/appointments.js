@@ -1,22 +1,29 @@
 const express = require('express');
 const router = express.Router();
 
-// Temporary in-memory storage
 let appointments = [];
 
-// Get all appointments
 router.get('/', (req, res) => {
-  res.json(appointments);
+  res.json({
+    success: true,
+    count: appointments.length,
+    data: appointments
+  });
 });
 
-// Create new appointment
 router.post('/', (req, res) => {
   const appointment = {
     id: Date.now().toString(),
-    ...req.body
+    ...req.body,
+    status: 'Scheduled',
+    createdAt: new Date().toISOString()
   };
   appointments.push(appointment);
-  res.status(201).json(appointment);
+  res.status(201).json({
+    success: true,
+    message: 'Appointment scheduled successfully',
+    data: appointment
+  });
 });
 
 module.exports = router;
